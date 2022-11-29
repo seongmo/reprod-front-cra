@@ -38,3 +38,12 @@ export const getProjectFile = (projName: string, filepath: string) =>
   axios.post(`/projects/${projName}/file`, {filepath}).then((res) => res.data)
 export const getProjectModelCard = (projName: string) =>
   axios.get(`/projects/${projName}/model-card`).then((res) => res.data)
+
+// JupyterLabs
+export const getJptLabs = () => axios('/jpt').then((res) => res.data)
+export const createJptLab = ({name}: {name: string}) => axios.post(`/jpt/`, {name})
+export const deleteJptLab = (id: string) => axios.delete(`/jpt/${id}`)
+export const getLabUniq = (name: string) =>
+  axios(`/labs/${name}/uniq`).then((res) => res.data)
+export const runJptLab = (id: string) => axios.get(`/jpt/${id}/run`)
+export const stopJptLab = (id: string) => axios.get(`/jpt/${id}/stop`)

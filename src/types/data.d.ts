@@ -65,3 +65,12 @@ export type Pm2Info = {
 export type ProjectDraft = {
   step: number
 }
+
+export type JptLab = {
+  _id: string
+  name: string
+  userId: string
+  createdAt: Date
+  updatedAt: Date
+  jupyterInstance?: any
+}
