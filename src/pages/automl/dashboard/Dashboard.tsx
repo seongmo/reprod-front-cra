@@ -1,8 +1,8 @@
-import {ChevronDownIcon, DeleteIcon, SearchIcon} from '@chakra-ui/icons'
+import {ChevronDownIcon, SearchIcon, StarIcon} from '@chakra-ui/icons'
 import {
+  Avatar,
   Box,
   Button,
-  Center,
   Flex,
   Heading,
   Input,
@@ -12,152 +12,104 @@ import {
   MenuButton,
   MenuItem,
   MenuList,
+  Table,
+  Tbody,
+  Td,
+  Tr,
   Wrap,
   WrapItem,
 } from '@chakra-ui/react'
-import {useMutation, useQuery} from '@tanstack/react-query'
-import {format} from 'date-fns'
+import {useQuery} from '@tanstack/react-query'
 import jwt_decode from 'jwt-decode'
-import {Link, NavLink, Outlet, Route, useNavigate} from 'react-router-dom'
-import {deleteProject, getProjects} from '../../../fetchers'
+import {Link, NavLink, Outlet, Route} from 'react-router-dom'
+import {getProjects} from '../../../fetchers'
 import {useAuth} from '../../../hooks/useAuth'
-import {queryClient} from '../../../queryClient'
+import {useProfile} from '../../../hooks/useProfile'
 import {ProjectItem} from '../../../types/data'
+import {ProjectsPage} from './ProjectsPage'
+import {SearchPage} from './SearchPage'
 
-function ProjectSummaryCard({proj}: {proj: ProjectItem}) {
-  const navigate = useNavigate()
-
-  const deleteProjMut = useMutation({
-    mutationFn: deleteProject,
-    onSuccess: (res) => {
-      queryClient.invalidateQueries(['projects'])
-      // navigate(``)
-    },
-  })
-
-  const status = proj.status
-  const createdAt = proj.createdAt && new Date(proj.createdAt)
-
+function StaredModel({proj}: {proj: ProjectItem}) {
   return (
-    <Box
-      bg="#e9eef6"
-      w="280px"
-      h="180px"
-      _hover={{bg: '#e7f0ff'}}
-      borderRadius={5}
-      cursor="pointer"
-      border="1px solid #dfdfdf"
-      p={5}
-      onClick={() => navigate(`../../projects/${proj.name}`)}
-    >
-      <Flex mb={3}>
-        <Box flex={1} fontWeight="bold" color="#0f70d4">
-          {proj.name}
-        </Box>
-        {/* <Box p={2}>{status === 'inline' ? 'running' : status}</Box> */}
-        <Box fontWeight={500} color="#19aa99">
-          {status}
-        </Box>
-      </Flex>
-      <Box>Model: {proj.config.model}</Box>
-      <Box>Datafile: {proj.config.datafile.replace(proj.name + '/', '')}</Box>
-      {/* <Box>{JSON.stringify(args)}</Box> */}
-      <Box fontSize="12px">
-        created at: {createdAt && format(createdAt, 'yyyy-MM-dd HH:mm:ss')}
+    <Box border="1px solid #ddd" p={1} position="relative" minW="280px">
+      <Box pos="absolute" top="10px" right="10px">
+        <StarIcon color="yellow.300" />
       </Box>
-      <Box mt={2} textAlign="right">
-        <Button
-          size="sm"
-          // colorScheme="red"
-          isLoading={deleteProjMut.isLoading}
-          onClick={(e) => {
-            e.stopPropagation()
-            window.confirm('Are you sure?') && deleteProjMut.mutate(proj._id)
-          }}
-        >
-          <DeleteIcon />
+
+      <Box mt="20px" mb="15px" textAlign="center">
+        {proj.name}
+      </Box>
+      <Flex justifyContent="space-between">
+        <Button size="sm" as={Link} to={`../projects/${proj.name}/model_card`}>
+          Model Card
         </Button>
-      </Box>
+        <Button size="sm" as={Link} to={`../projects/${proj.name}`}>
+          More Detail
+        </Button>
+      </Flex>
     </Box>
   )
 }
 
-function useGetModels() {
-  const models = [
-    {
-      key: 'model1',
-      name: 'test model 1',
-      url: '',
-    },
-    {
-      key: 'model2',
-      name: 'test model 2',
-      url: '',
-    },
-    {
-      key: 'model3',
-      name: 'test model 3',
-      url: '',
-    },
-    {
-      key: 'model4',
-      name: 'some model name',
-      url: '',
-    },
-  ]
-  return models
-}
-function useGetDatasets() {
-  const datasets = [
-    {
-      key: 'dataset1',
-      name: 'dataset 1',
-      url: '',
-    },
-    {
-      key: 'dataset2',
-      name: 'dataset 2',
-      url: '',
-    },
-  ]
-  return datasets
+function StaredProjects() {
+  const {isLoading, data} = useQuery<ProjectItem[]>(['projects'], getProjects)
+  if (isLoading) return <div>loading...</div>
+  return (
+    <Box pt={4}>
+      <Heading as="h5" size="md" mb={2}>
+        Star
+      </Heading>
+      <Wrap mb={4}>
+        {data
+          ?.filter((p) => p.stared)
+          .map((proj) => (
+            <WrapItem key={proj._id}>
+              <StaredModel proj={proj} />
+            </WrapItem>
+          ))}
+      </Wrap>
+    </Box>
+  )
 }
 
 function DashboardSummary() {
-  const models = useGetModels()
-  const datasets = useGetDatasets()
+  const profile = useProfile()
 
   return (
     <>
       <Heading as="h4" size="lg">
-        Users's Activey
+        User Information
       </Heading>
-      <Box pt={4}>
-        <Heading as="h5" size="md" mb={2}>
-          Models
-        </Heading>
-        <Wrap mb={4}>
-          {models.map((model) => (
-            <WrapItem key={model.key}>
-              <Box border="1px solid #ddd" p={2}>
-                {model.name}
-              </Box>
-            </WrapItem>
-          ))}
-        </Wrap>
-        <Heading as="h5" size="md" mb={2}>
-          Datasets
-        </Heading>
-        <Wrap mb={4}>
-          {datasets.map((ds) => (
-            <WrapItem key={ds.key}>
-              <Box border="1px solid #ddd" p={2}>
-                {ds.name}
-              </Box>
-            </WrapItem>
-          ))}
-        </Wrap>
+      <Box border="1px solid #ddd" borderRadius="10px" p={4}>
+        <Flex>
+          <Box>
+            <Avatar
+              size="2xl"
+              name={profile.name}
+              bg="teal.200"
+              m={2}
+              // src="https://bit.ly/broken-link"
+            />
+            <Box textAlign="center">{profile.name}</Box>
+          </Box>
+          <Box flex={1} ml={18}>
+            <Table>
+              <Tbody>
+                <Tr>
+                  <Td>Name</Td>
+                  <Td>{profile.name}</Td>
+                </Tr>
+                <Tr>
+                  <Td>E-mail</Td>
+                  <Td>{profile.email}</Td>
+                </Tr>
+              </Tbody>
+            </Table>
+          </Box>
+        </Flex>
       </Box>
+
+      <StaredProjects />
     </>
   )
 }
@@ -213,9 +165,11 @@ function ProjectsDashboard() {
               {profile.name}
             </MenuButton>
             <MenuList>
-              {/* <MenuItem onClick={() => navigate('/jlab')}>JupyterLabs</MenuItem> */}
               <MenuItem as={Link} to="/jlab">
                 JupyterLabs
+              </MenuItem>
+              <MenuItem as={Link} to="/profile">
+                Profile ({profile.name})
               </MenuItem>
               <MenuItem onClick={() => logout()} fontWeight="bold">
                 Logout
@@ -235,11 +189,11 @@ function ProjectsDashboard() {
           <NavLink to="" end>
             {({isActive}) => <DashboardMenuItem title="Dashboard" isActive={isActive} />}
           </NavLink>
-          <NavLink to="profile">
-            {({isActive}) => <DashboardMenuItem title="Profile" isActive={isActive} />}
-          </NavLink>
           <NavLink to="projects">
             {({isActive}) => <DashboardMenuItem title="Projects" isActive={isActive} />}
+          </NavLink>
+          <NavLink to="search">
+            {({isActive}) => <DashboardMenuItem title="Search" isActive={isActive} />}
           </NavLink>
         </Box>
 
@@ -255,68 +209,10 @@ function ProjectsDashboard() {
   )
 }
 
-function Projects() {
-  const navigate = useNavigate()
-  const {isLoading, data} = useQuery<ProjectItem[]>(['projects'], getProjects)
-
-  if (isLoading) {
-    return <Box>Loading</Box>
-  }
-
-  return (
-    <>
-      <Heading as="h4" size="lg">
-        Projects
-      </Heading>
-      <Box pt={4}>
-        <Box>
-          <Wrap spacing="16px">
-            <WrapItem>
-              <Center
-                bg="#eee"
-                w="280px"
-                h="180px"
-                borderRadius={5}
-                cursor="pointer"
-                border="1px solid #dfdfdf"
-                _hover={{bg: '#f0f0d0'}}
-                onClick={() => navigate(`../../projects/new`)}
-              >
-                + New Project
-              </Center>
-            </WrapItem>
-            {data?.map((proj) => (
-              <WrapItem key={proj._id}>
-                <ProjectSummaryCard proj={proj} />
-              </WrapItem>
-            ))}
-          </Wrap>
-        </Box>
-      </Box>
-    </>
-  )
-}
-
-function Profile() {
-  const {user} = useAuth()
-  const profile = jwt_decode(user?.token || '') as any
-  return (
-    <Box>
-      <Heading as="h4" size="lg">
-        Profile
-      </Heading>
-      <Box pt={4}>
-        <Box>Email: {profile.email}</Box>
-        <Box>Name: {profile.name}</Box>
-      </Box>
-    </Box>
-  )
-}
-
 export const DashboardRoutes = (
   <Route path="dashboard" element={<ProjectsDashboard />}>
     <Route index element={<DashboardSummary />} />
-    <Route path="projects" element={<Projects />} />
-    <Route path="profile" element={<Profile />} />
+    <Route path="projects" element={<ProjectsPage />} />
+    <Route path="search" element={<SearchPage />} />
   </Route>
 )

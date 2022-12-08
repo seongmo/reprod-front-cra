@@ -28,8 +28,6 @@ import {
   Th,
   Thead,
   Tr,
-  Wrap,
-  WrapItem,
 } from '@chakra-ui/react'
 import {useMutation, useQuery} from '@tanstack/react-query'
 import axios from 'axios'
@@ -37,16 +35,7 @@ import {get, sortBy} from 'lodash'
 import React, {useState} from 'react'
 import {FaDownload, FaFolder} from 'react-icons/fa'
 import Plot from 'react-plotly.js'
-import {
-  Link,
-  Navigate,
-  NavLink,
-  Outlet,
-  Route,
-  useMatch,
-  useNavigate,
-  useParams,
-} from 'react-router-dom'
+import {Link, Navigate, NavLink, Outlet, Route, useParams} from 'react-router-dom'
 import SyntaxHighlighter from 'react-syntax-highlighter'
 import {docco} from 'react-syntax-highlighter/dist/esm/styles/hljs'
 import {
@@ -59,7 +48,7 @@ import {
   getProjectOutput,
   getProjectPlots,
   getProjectRequirement,
-} from '../fetchers'
+} from '../../fetchers'
 import fileDownload from 'js-file-download'
 import {ArrowBackIcon} from '@chakra-ui/icons'
 
@@ -424,9 +413,11 @@ function AssetsPage() {
                         <Td></Td>
                       </Tr>
                     ) : (
-                      <Tr>
+                      <Tr bg={selectedFile === v.path ? 'gray.100' : 'white'}>
                         <Td>
                           <Box
+                            color={selectedFile === v.path ? 'blue.500' : undefined}
+                            fontWeight={selectedFile === v.path ? 'bold' : undefined}
                             display="flex"
                             onClick={() => setSelectedFile(v.path)}
                             _hover={{color: 'blue.500', cursor: 'pointer'}}
@@ -554,18 +545,6 @@ function ApiPage() {
             <Box border="1px solid #ddd" p={2} borderRadius="6px">
               입력 문장에 해당하는 클래스는 <strong>{result.intent}</strong> 입니다.
             </Box>
-            {result.scores.map((s) => (
-              <Flex key={s.class}>
-                <Box w="30px">{s.class}</Box>
-                <Slider defaultValue={s.score * 100}>
-                  <SliderTrack>{/* <SliderFilledTrack /> */}</SliderTrack>
-                  <SliderThumb bg="red.300" />
-                </Slider>
-                <Box w="80px" textAlign="right">
-                  {s.score}
-                </Box>
-              </Flex>
-            ))}
           </>
         )}
       </Box>
@@ -573,68 +552,10 @@ function ApiPage() {
   )
 }
 
-const modelCardText = `---
-language:
-- ko
-license: apache-2.0
-library_name: keras  # Optional.
-tags:
-- kogpt2
-- single-label-classification
-datasets:
-- kisti/paper-code
-metrics:
-- train_accuracy
-- train_loss
-- train_accuracy
-- train_loss
-- test_accuracy
-- test_loss
-
-# Optional. Add this if you want to encode your eval results in a structured way.
-model-index:
-- name: kogpt2-demo
-  results:
-  - task:
-      type: sigle-label-classification             
-      name: Signle Lael Classification             
-    model:
-      type: pre-trained
-      name: kogpt2
-      args:
-        n_epochs: 3
-        lr: 5e-05
-        batch_size: 8
-    dataset:
-      type: kisti/paper-code                       
-      name: Paper Classification Coce (Korean)     
-      split:
-        train: 0.64
-        valid: 0.16
-        test: 0.2
-      revision: 5503434ddd753f426f4b38109466949a1217c2bb  
-      args:
-        input: PAPER_TEXT
-        target: RCMN_CD1
-        max_length: 64
-    metrics:
-      - type: train_accuracy
-        value: 0.7933491468429565
-      - type: train_loss
-        value: 0.5298528075218201
-      - type: test_accuracy
-        value: 0.7424242496490479
-      - type: test_loss
-        value: 0.8049081563949585
-      - type: valid_accuracy
-        value: 0.6132075190544128
-      - type: valid_loss
-        value: 0.9963229894638062
----`
 function ModelCardPage() {
   const {projId} = useParams<{projId: string}>()
   const proj = projId
-  const {isLoading, data, isError} = useQuery(['assets', proj], () => {
+  const {isLoading, data, isError} = useQuery(['model-card', proj], () => {
     return getProjectModelCard(proj!)
   })
 
@@ -645,6 +566,7 @@ function ModelCardPage() {
     return <Box>Error!</Box>
   }
 
+  console.log(data)
   return (
     <Box p={4}>
       <Heading as="h3" size="md" mb={4}>
@@ -652,59 +574,11 @@ function ModelCardPage() {
       </Heading>
 
       <Box>
-        <SyntaxHighlighter style={docco}>{data.modelCard}</SyntaxHighlighter>
+        <SyntaxHighlighter style={docco} language="json">
+          {data.projectCard}
+        </SyntaxHighlighter>
       </Box>
     </Box>
-  )
-}
-
-function DashboardSummary() {
-  return (
-    <>
-      <Heading as="h4" size="lg">
-        Users's Activey
-      </Heading>
-      <Heading as="h5" size="md">
-        Models
-      </Heading>
-      <Wrap>
-        <WrapItem>
-          <Box border="1px solid #ddd" p={2}>
-            test model 1
-          </Box>
-        </WrapItem>
-        <WrapItem>
-          <Box border="1px solid #ddd" p={2}>
-            test model 2
-          </Box>
-        </WrapItem>
-        <WrapItem>
-          <Box border="1px solid #ddd" p={2}>
-            test model 3
-          </Box>
-        </WrapItem>
-        <WrapItem>
-          <Box border="1px solid #ddd" p={2}>
-            some model name
-          </Box>
-        </WrapItem>
-      </Wrap>
-      <Heading as="h5" size="md">
-        Datasets
-      </Heading>
-      <Wrap>
-        <WrapItem>
-          <Box border="1px solid #ddd" p={2}>
-            dataset 1
-          </Box>
-        </WrapItem>
-        <WrapItem>
-          <Box border="1px solid #ddd" p={2}>
-            dataset 2
-          </Box>
-        </WrapItem>
-      </Wrap>
-    </>
   )
 }
 

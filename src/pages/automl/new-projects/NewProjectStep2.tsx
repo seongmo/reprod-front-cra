@@ -115,8 +115,8 @@ export function NewProjectStep2({
     {
       onSuccess: (res: any) => {
         console.log({res})
-        const {projectName, filename} = res
-        setUploaded([projectName, filename].join('/'))
+        const {filename} = res
+        setUploaded(filename)
       },
     },
   )
@@ -191,7 +191,7 @@ export function NewProjectStep2({
             </RadioGroup>
           </Box>
         )}
-        {uploaded && <PreviewData filepath={uploaded} />}
+        {uploaded && <PreviewData filepath={[config.projectName, uploaded].join('/')} />}
         <Flex justifyContent="space-between" mt={4}>
           <Button
             colorScheme="teal"

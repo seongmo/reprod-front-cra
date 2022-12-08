@@ -12,7 +12,6 @@ import {useMutation} from '@tanstack/react-query'
 import axios from 'axios'
 import {useNavigate} from 'react-router-dom'
 
-const deleteDraft = () => axios.delete('/draft')
 const saveDraft = (draft: void) => axios.post('/draft', draft)
 
 export function FindPassword() {
@@ -20,11 +19,6 @@ export function FindPassword() {
   const mutation = useMutation(saveDraft, {
     onSuccess: (res) => {
       // onCreated()
-    },
-  })
-  const deleteMut = useMutation(deleteDraft, {
-    onSuccess: (res) => {
-      // navigate(`/projects`)
     },
   })
 

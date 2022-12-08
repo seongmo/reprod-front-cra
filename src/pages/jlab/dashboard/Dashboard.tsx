@@ -1,13 +1,10 @@
-import {ChevronDownIcon, DeleteIcon, SearchIcon} from '@chakra-ui/icons'
+import {ChevronDownIcon, DeleteIcon} from '@chakra-ui/icons'
 import {
   Box,
   Button,
   Center,
   Flex,
   Heading,
-  Input,
-  InputGroup,
-  InputLeftElement,
   Menu,
   MenuButton,
   MenuItem,
@@ -22,11 +19,9 @@ import {Link, Navigate, NavLink, Outlet, Route, useNavigate} from 'react-router-
 import {deleteJptLab, getJptLabs, runJptLab, stopJptLab} from '../../../fetchers'
 import {useAuth} from '../../../hooks/useAuth'
 import {queryClient} from '../../../queryClient'
-import {JptLab, ProjectItem} from '../../../types/data'
+import {JptLab} from '../../../types/data'
 
 function LabSummaryCard({lab}: {lab: JptLab}) {
-  const navigate = useNavigate()
-
   const deleteLabMut = useMutation({
     mutationFn: deleteJptLab,
     onSuccess: (res) => {
@@ -49,7 +44,8 @@ function LabSummaryCard({lab}: {lab: JptLab}) {
     },
   })
 
-  const status = lab.jupyterInstance ? 'running' : 'stopped'
+  const hasInstance = !!lab.jupyterInstance
+  const status = hasInstance ? lab.jupyterInstance.pod.status.phase : 'Stopped'
   const createdAt = lab.createdAt && new Date(lab.createdAt)
 
   return (
@@ -70,7 +66,7 @@ function LabSummaryCard({lab}: {lab: JptLab}) {
         </Box>
         {/* <Box p={2}>{status === 'inline' ? 'running' : status}</Box> */}
         <Box fontWeight={500} color="#19aa99">
-          {status}
+          {lab.jupyterInstance?.pod?.status?.phase || 'Stopped'}
         </Box>
       </Flex>
 
@@ -78,21 +74,12 @@ function LabSummaryCard({lab}: {lab: JptLab}) {
         created at: {createdAt && format(createdAt, 'yyyy-MM-dd HH:mm:ss')}
       </Box>
       <Box mt={2} textAlign="right">
-        <Button
-          size="sm"
-          colorScheme="blue"
-          isLoading={runLabMut.isLoading}
-          onClick={(e) => {
-            runLabMut.mutate(lab._id)
-            // e.stopPropagation()
-            // window.confirm('Are you sure?') && deleteLabMut.mutate(lab._id)
-          }}
-        >
-          Run
-        </Button>
-        {status === 'running' && (
-          <Box>
+        {hasInstance ? (
+          <>
             <Button
+              size="sm"
+              colorScheme="blue"
+              isDisabled={status !== 'Running'}
               onClick={() => {
                 window.open(`/jpt/${lab.name}/lab`, '_blank')
               }}
@@ -100,13 +87,29 @@ function LabSummaryCard({lab}: {lab: JptLab}) {
               Open
             </Button>
             <Button
+              ml={1}
+              size="sm"
+              colorScheme="red"
               onClick={() => {
-                stopLabMut.mutate(lab._id)
+                window.confirm('Are you sure?') && stopLabMut.mutate(lab._id)
               }}
             >
               Stop
             </Button>
-          </Box>
+          </>
+        ) : (
+          <Button
+            size="sm"
+            colorScheme="blue"
+            isLoading={runLabMut.isLoading}
+            isDisabled={hasInstance}
+            onClick={(e) => {
+              runLabMut.mutate(lab._id)
+              // e.stopPropagation()
+            }}
+          >
+            Run
+          </Button>
         )}
         <Button
           size="sm"
@@ -168,9 +171,11 @@ function LabsDashboard() {
               {profile.name}
             </MenuButton>
             <MenuList>
-              {/* <MenuItem onClick={() => navigate('/jlab')}>JupyterLabs</MenuItem> */}
               <MenuItem as={Link} to="/automl">
                 AutoML
+              </MenuItem>
+              <MenuItem as={Link} to="/profile">
+                Profile ({profile.name})
               </MenuItem>
               <MenuItem onClick={() => logout()} fontWeight="bold">
                 Logout
@@ -204,7 +209,9 @@ function LabsDashboard() {
 
 function Labs() {
   const navigate = useNavigate()
-  const {isLoading, data, refetch} = useQuery<JptLab[]>(['labs'], getJptLabs)
+  const {isLoading, data, refetch} = useQuery<JptLab[]>(['labs'], getJptLabs, {
+    refetchInterval: 1000,
+  })
 
   if (isLoading) {
     return <Box>Loading</Box>

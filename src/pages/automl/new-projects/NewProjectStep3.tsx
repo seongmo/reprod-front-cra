@@ -24,7 +24,6 @@ import {
 } from '@chakra-ui/react'
 import {useMutation, useQuery} from '@tanstack/react-query'
 import axios from 'axios'
-import {last} from 'lodash'
 import Papa from 'papaparse'
 import {useState} from 'react'
 import {useNavigate} from 'react-router-dom'
@@ -38,11 +37,16 @@ export function NewProjectStep3({
   config: any
   onCreated: () => void
 }) {
-  const {isLoading, data} = useQuery(['preview', config.filepath], () => {
-    return axios
-      .post(`/draft/preview`, {filepath: config.filepath})
-      .then((res) => res.data)
-  })
+  const {isLoading, data} = useQuery(
+    ['preview', config.projectName, config.filepath],
+    () => {
+      return axios
+        .post(`/draft/preview`, {
+          filepath: [config.projectName, config.filepath].join('/'),
+        })
+        .then((res) => res.data)
+    },
+  )
 
   const [splitType, setSplitType] = useState<string>('manual')
   const [trainNum, setTrainNum] = useState<number>(70)
@@ -108,7 +112,7 @@ export function NewProjectStep3({
           </Heading>
           <Box bg="#f2f2f2" p={1}>
             {/* @ts-ignore */}
-            {last(config.filepath.split('/')) || null}
+            {config.filepath || null}
           </Box>
           <Table>
             <Thead>

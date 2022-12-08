@@ -47,6 +47,7 @@ export type ProjectItem = {
   startedAt: string | Date | null
   createdAt: string | Date | null
   // pm2Info: Pm2Info
+  stared?: boolean
 }
 
 export type Pm2Info = {

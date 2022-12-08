@@ -239,9 +239,9 @@ export function NewProjectStep4({
           <Heading as="h4" size="sm" mb={2}>
             {config.projectName}
           </Heading>
-          <Heading as="h5" size="xs" mb={4}>
+          {/* <Heading as="h5" size="xs" mb={4}>
             Select hyperparameter search
-          </Heading>
+          </Heading> */}
 
           <Box fontWeight="bold">Select hyperparameter search</Box>
           <RadioGroup value={hyparams} onChange={setHyparams} mb={4}>
